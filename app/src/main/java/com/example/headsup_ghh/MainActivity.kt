@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 private lateinit var binding : ActivityMainBinding
 private var isStart = false
 private  var time = 60000L
+private  var randomIndex = 0
  private lateinit var timer: CountDownTimer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +100,7 @@ private  var time = 60000L
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
         isStart = sharedPref.getBoolean("isPlaying", false)
         time = sharedPref.getLong("timer",60000L)
+        randomIndex = sharedPref.getInt("randomIndex",0)
         if (isStart){timer(time)}
         startGame()
         val orientation = this.resources.configuration.orientation
@@ -113,6 +115,7 @@ private  var time = 60000L
             if (isStart) {
                 binding.tvRotate.isVisible = true
                 binding.llQuestion.isVisible = false
+                binding.tvTimer.text = "Time : ${time/ 1000}"
                 timer.cancel()
             }
         }
@@ -124,6 +127,7 @@ private  var time = 60000L
         with (sharedPref.edit()) {
             putBoolean("isPlaying", isDone)
             putLong("timer",isTime)
+            putInt("randomIndex",randomIndex)
             apply()
         }
     }
@@ -139,12 +143,21 @@ private  var time = 60000L
         api?.GetData()?.enqueue(object: Callback<Celebrities> {
             override fun onResponse(call: Call<Celebrities>, response: Response<Celebrities>) {
                 val data = response.body()!!
-                val randomCeleb = Random.nextInt(0 ,data.size - 1)
+                var randomCeleb = Random.nextInt(0 ,data.size - 1)
                 println(":)  ${data[randomCeleb]}")
+                if (randomCeleb == randomIndex){
+                    if (randomCeleb == data.size - 1){
+                        randomCeleb--
+                    }else {
+                        randomCeleb++
+                    }
+                }
                 binding.tvName.text = data[randomCeleb].name
                 binding.tv1.text = data[randomCeleb].taboo1
                 binding.tv2.text = data[randomCeleb].taboo2
                 binding.tv3.text = data[randomCeleb].taboo3
+
+                randomIndex = randomCeleb
 
             }
 
